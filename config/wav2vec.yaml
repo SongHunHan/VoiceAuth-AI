@@ -1,0 +1,23 @@
+dataset_name: 'VoiceDatasetWav2Vec'
+model_name: 'facebook/wav2vec2-base-960h'
+        
+is_amp: true
+
+wandb:
+    use: true
+    project_name: 'wav2vec_contrastive_learning'
+    run_name: ''
+
+num_workers: 32
+epochs: 3
+batch_size: 32
+learning_rate: 0.00003
+warmup_steps_rate: 10
+seed_number: 42
+
+max_input_length: 4.0
+log_interval: 100
+
+data_path:
+    train: '/workspace/ssd/AI_hub/speech_recognition/dataset/1.Training/source_data/'
+    valid: '/workspace/ssd/AI_hub/speech_recognition/dataset/2.Validation/source_data/'
