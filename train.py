@@ -76,7 +76,7 @@ def train_epoch(model, dataloader, loss_fn, optimizer, epoch, scaler, scheduler,
         train_progress_bar.set_postfix({"train_loss": train_loss})
         
         if idx != 0 and idx % config['log_interval'] == 0:
-            logger.log({"train_loss", train_loss})
+            logger.log({"train_loss": train_loss})
             
     avg_train_loss = total_train_loss / len(dataloader)
     return avg_train_loss
@@ -104,7 +104,7 @@ def valid_epoch(model, dataloader, loss_fn, optimizer, epoch, logger, device, co
         valid_progress_bar.set_postfix({"valid_loss": valid_loss})
         
         if idx != 0 and idx % config['log_interval'] == 0:
-            logger.log({'valid_loss', valid_loss})
+            logger.log({'valid_loss': valid_loss})
         
     avg_val_loss = total_val_loss / len(dataloader)
     return avg_val_loss
