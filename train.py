@@ -10,12 +10,12 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import Dataset, DataLoader
 from torch.cuda.amp import GradScaler
-from transformers import AutoProcessor, Wav2Vec2Model
-from transformers.models.whisper.modeling_whisper import WhisperEncoder
-from transformers import AutoFeatureExtractor #, Wav2Vec2FeatureExtractor, WhisperFeatureExtractor, 
+from transformers import AutoProcessor, Wav2Vec2Model, Wav2Vec2ForXVector, AutoFeatureExtractor
 from transformers import get_linear_schedule_with_warmup
 from tqdm import tqdm
+from sklearn.metrics import roc_curve, auc, precision_recall_curve, f1_score
 
+from models import load_model
 from dataset.VoiceDataset import load_custom_dataset
 from utils.logger import CustomLogger
 from utils.losses import InfoNCE
@@ -44,6 +44,10 @@ def set_seed(seed_number):
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False 
     
+
+def calculate_similarity(embedding1, embedding2):
+    return F.cosine_similarity(embedding1, embedding2).cpu().numpy()
+
     
 def train_epoch(model, dataloader, loss_fn, optimizer, epoch, scaler, scheduler, logger, device, config):
     model.train()
@@ -78,13 +82,15 @@ def train_epoch(model, dataloader, loss_fn, optimizer, epoch, scaler, scheduler,
         if idx != 0 and idx % config['log_interval'] == 0:
             logger.log({"train_loss": train_loss})
             
-    avg_train_loss = total_train_loss / len(dataloader)
-    return avg_train_loss
+    train_avg_loss = total_train_loss / len(dataloader)
+    return train_avg_loss
 
 
 def valid_epoch(model, dataloader, loss_fn, optimizer, epoch, logger, device, config):
     model.eval()
     total_val_loss = 0
+    similarities = []
+    labels = []
  
     valid_progress_bar = tqdm(dataloader, desc=f"Validation {epoch+1}", ncols=100)
     for idx, batch in enumerate(valid_progress_bar):
@@ -92,6 +98,7 @@ def valid_epoch(model, dataloader, loss_fn, optimizer, epoch, logger, device, co
         anchor = anchor.to(device)
         positive = positive.to(device)
         negative = negative.to(device)
+        
         with torch.no_grad():
             anchor_embeddings = model(anchor).last_hidden_state.mean(dim=1)
             positive_embeddings = model(positive).last_hidden_state.mean(dim=1)
@@ -101,13 +108,37 @@ def valid_epoch(model, dataloader, loss_fn, optimizer, epoch, logger, device, co
         
         total_val_loss += loss.item()
         valid_loss = total_val_loss / (idx + 1)
+        
+        pos_similirarity = calculate_similarity(anchor_embeddings, positive_embeddings)
+        neg_similirarity = calculate_similarity(anchor_embeddings, negative_embeddings)
+        
+        similarities.extend(pos_sim)
+        similarities.extend(neg_sim)
+        labels.extend([1] * len(pos_sim))
+        labels.extend([0] * len(neg_sim))
+        
         valid_progress_bar.set_postfix({"valid_loss": valid_loss})
         
         if idx != 0 and idx % config['log_interval'] == 0:
             logger.log({'valid_loss': valid_loss})
         
     avg_val_loss = total_val_loss / len(dataloader)
-    return avg_val_loss
+    
+    # Calculate ROC AUC
+    fpr, tpr, thresholds = roc_curve(labels, similarities)
+    roc_auc = auc(fpr, tpr)
+    
+    # Calculate Youden's J statistic to find the optimal threshold
+    J = tpr - fpr
+    ix = np.argmax(J)
+    best_threshold = thresholds[ix]
+
+    # Calculate F1 score at the optimal threshold
+    binary_predictions = (similarities > best_threshold).astype(int)
+    f1 = f1_score(labels, binary_predictions)
+
+    print(f'Validation Loss: {avg_val_loss:.4f}, ROC AUC: {roc_auc:.4f}, Best Threshold: {best_threshold:.4f}, F1 Score: {f1:.4f}')
+    return val_avg_loss, roc_auc, best_threshold, f1
 
 
 def main():
@@ -116,11 +147,12 @@ def main():
     config = get_config(config_path)
     
     set_seed(config['seed_number'])
-    save_path = f"finetuned_model/{config['model_name'].split('/')[-1]}"
+    save_path = f"finetuned_model/{config['wandb']['run_name']}_{config['model_name'].split('/')[-1]}"
     os.makedirs(save_path, exist_ok=True)
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = Wav2Vec2Model.from_pretrained(config['model_name']).to(device)
+    # model = load_model(config['model_name']).from_pretrained(config['model_name'])
     optimizer = torch.optim.AdamW(model.parameters(), lr=config['learning_rate'])
     loss_fn = InfoNCE()
 
@@ -141,7 +173,7 @@ def main():
     
     for epoch in range(config['epochs']):
         train_avg_loss = train_epoch(model, train_dataloader, loss_fn, optimizer, epoch, scaler, scheduler, logger, device, config)
-        val_avg_loss = valid_epoch(model, train_dataloader, loss_fn, optimizer, epoch, logger, device, config)
+        val_avg_loss, roc_auc, best_threshold, f1 = valid_epoch(model, train_dataloader, loss_fn, optimizer, epoch, logger, device, config)
 
         if val_avg_loss < best_val_loss:
             best_val_loss = val_avg_loss

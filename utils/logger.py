@@ -17,6 +17,11 @@ class CustomLogger:
         if self.wandb_use:
             self.wandb.log(log_dict)
 
+    def logs(self, logs:dict, step:int):
+        if self.use_wandb:
+            for key, value in logs.items():
+                self.log(key,value)
+    
     
     def finish(self):
         if self.wandb_use:
