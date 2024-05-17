@@ -100,9 +100,9 @@ def valid_epoch(model, dataloader, loss_fn, optimizer, epoch, logger, device, co
         negative = negative.to(device)
         
         with torch.no_grad():
-            anchor_embeddings = model(anchor).embeddings.
-            positive_embeddings = model(positive).embeddings.
-            negative_embeddings = model(negative).embeddings.
+            anchor_embeddings = model(anchor).embeddings
+            positive_embeddings = model(positive).embeddings
+            negative_embeddings = model(negative).embeddings
 
         loss = loss_fn(anchor_embeddings, positive_embeddings, negative_embeddings)
         
