@@ -137,7 +137,7 @@ def valid_epoch(model, dataloader, loss_fn, optimizer, epoch, logger, device, co
     binary_predictions = (similarities > best_threshold).astype(int)
     f1 = f1_score(labels, binary_predictions)
 
-    print(f'Validation Loss: {avg_val_loss:.4f}, ROC AUC: {roc_auc:.4f}, Best Threshold: {best_threshold:.4f}, F1 Score: {f1:.4f}')
+    print(f'Validation Loss: {val_avg_loss:.4f}, ROC AUC: {roc_auc:.4f}, Best Threshold: {best_threshold:.4f}, F1 Score: {f1:.4f}')
     return val_avg_loss, roc_auc, best_threshold, f1
 
 
