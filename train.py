@@ -41,8 +41,8 @@ def set_seed(seed_number):
     torch.manual_seed(seed_number)
     torch.cuda.manual_seed(seed_number)
     torch.cuda.manual_seed_all(seed_number)
-    torch.backends.cudnn.deterministic = True
-    torch.backends.cudnn.benchmark = False 
+    torch.backends.cudnn.deterministic = False ## 재현을 위한 거면 True
+    torch.backends.cudnn.benchmark = True      ## 재현을 위한 거면 False
     
 
 def calculate_similarity(embedding1, embedding2):
