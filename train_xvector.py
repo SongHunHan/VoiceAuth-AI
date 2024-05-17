@@ -112,10 +112,10 @@ def valid_epoch(model, dataloader, loss_fn, optimizer, epoch, logger, device, co
         pos_similirarity = calculate_similarity(anchor_embeddings, positive_embeddings)
         neg_similirarity = calculate_similarity(anchor_embeddings, negative_embeddings)
         
-        similarities.extend(pos_sim)
-        similarities.extend(neg_sim)
-        labels.extend([1] * len(pos_sim))
-        labels.extend([0] * len(neg_sim))
+        similarities.extend(pos_similirarity)
+        similarities.extend(neg_similirarity)
+        labels.extend([1] * len(pos_similirarity))
+        labels.extend([0] * len(neg_similirarity))
         
         valid_progress_bar.set_postfix({"valid_loss": valid_loss})
         
