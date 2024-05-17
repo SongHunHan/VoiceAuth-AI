@@ -122,7 +122,7 @@ def valid_epoch(model, dataloader, loss_fn, optimizer, epoch, logger, device, co
         if idx != 0 and idx % config['log_interval'] == 0:
             logger.log({'valid_loss': valid_loss})
         
-    avg_val_loss = total_val_loss / len(dataloader)
+    val_avg_loss = total_val_loss / len(dataloader)
     
     # Calculate ROC AUC
     fpr, tpr, thresholds = roc_curve(labels, similarities)
