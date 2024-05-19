@@ -29,6 +29,7 @@ class VoiceDatasetWav2Vec(Dataset):
         self.speaker_datas = {}
         for file in self.data:
             speaker_dir = os.path.dirname(file)
+            speaker_dir = speaker_dir.split('/')[-1]
             if speaker_dir not in self.speaker_datas:
                 self.speaker_datas[speaker_dir] = []
             self.speaker_datas[speaker_dir].append(file)
@@ -78,6 +79,7 @@ class VoiceDatasetWhisper(Dataset):
         self.speaker_datas = {}
         for file in self.data:
             speaker_dir = os.path.dirname(file)
+            speaker_dir = speaker_dir.split('/')[-1]
             if speaker_dir not in self.speaker_datas:
                 self.speaker_datas[speaker_dir] = []
             self.speaker_datas[speaker_dir].append(file)
