@@ -48,14 +48,14 @@ class VoiceDatasetWav2Vec(Dataset):
         anchor_audio = self.load_audio(anchor_data)
         
         speaker_dir = os.path.dirname(anchor_data)
-        speaker_datas = sorted(self.speaker_datas[speaker_dir])
+        speaker_datas = sorted(self.speaker_datas[speaker_dir.split('/')[-1]])
         
         anchor_idx = speaker_datas.index(anchor_data)
         positive_idx = (anchor_idx + 1) % len(speaker_datas)
         positive_data = speaker_datas[positive_idx]
         positive_audio = self.load_audio(positive_data)
         
-        negative_datas_dirs = [d for d in self.speaker_datas.keys() if d != speaker_dir]
+        negative_datas_dirs = [d for d in self.speaker_datas.keys() if d != speaker_dir.split('/')[-1]]
         negative_speaker_dir = random.choice(negative_datas_dirs)
         negative_data = random.choice(self.speaker_datas[negative_speaker_dir])
         negative_audio = self.load_audio(negative_data)
