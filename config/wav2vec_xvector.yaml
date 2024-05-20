@@ -11,7 +11,7 @@ wandb:
 num_workers: 12
 epochs: 3
 batch_size: 24
-learning_rate: 0.00003
+learning_rate: 0.00001
 warmup_steps_rate: 10
 seed_number: 42
 

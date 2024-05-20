@@ -69,7 +69,7 @@ def train_epoch(model, dataloader, loss_fn, optimizer, epoch, scaler, scheduler,
         loss = loss_fn(anchor_embeddings, positive_embeddings, negative_embeddings)
         scaler.scale(loss).backward()
         scaler.unscale_(optimizer)
-        torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=0.1)
+        torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
         scaler.step(optimizer)
         scaler.update()
         
