@@ -18,22 +18,22 @@ class VoiceDatasetWav2Vec(Dataset):
         self.data_path = config['data_path'][mode]
         self.max_length = config['max_input_length']
         self.feature_extractor = AutoFeatureExtractor.from_pretrained(config['model_name'])
-        # self.processor = AutoProcessor.from_pretrained(model_name)
-        self.data = []
-    
-        for root, dirs, files in os.walk(self.data_path):
-            for file in files:
-                if file.endswith(".wav"):
-                    self.data.append(os.path.join(root, file))
-                    
-        self.speaker_datas = {}
-        for file in self.data:
-            speaker_dir = os.path.dirname(file)
-            speaker_dir = speaker_dir.split('/')[-1]
-            if speaker_dir not in self.speaker_datas:
-                self.speaker_datas[speaker_dir] = []
-            self.speaker_datas[speaker_dir].append(file)
+        self.data = []            # 전체 데이터
+        self.speaker_files = []   # 총 화자
+        self.speaker_datas = {}   # 각 화자에 대한 데이터
         
+        with open(self.data_path, 'r') as f:
+            for line in f:
+                self.speaker_files.append(line.strip())
+                
+        for txt_file in self.speaker_files:
+            speaker_id = os.path.basename(txt_file).split('.')[0]
+            with open(txt_file, 'r') as f:
+                self.speaker_datas[speaker_id] = [line.strip() for line in f]
+        
+        for files in self.speaker_datas.values():
+            self.data.extend(files)
+
 
     def load_audio(self, file_path):
         audio, sampling_rate = librosa.load(file_path, sr=16000)
@@ -47,17 +47,18 @@ class VoiceDatasetWav2Vec(Dataset):
         anchor_data = self.data[idx]
         anchor_audio = self.load_audio(anchor_data)
         
-        speaker_dir = os.path.dirname(anchor_data)
-        each_speaker_datas = sorted(self.speaker_datas[speaker_dir.split('/')[-1]])
+        # speaker_id 추출
+        speaker_id = os.path.basename(os.path.dirname(anchor_data))
+        each_speaker_datas = self.speaker_datas[speaker_id]
         
-        anchor_idx = each_speaker_datas.index(anchor_data)
-        positive_idx = (anchor_idx + 1) % len(each_speaker_datas)
-        positive_data = each_speaker_datas[positive_idx]
+        # Positive pair는 같은 화자의 파일들 중 랜덤으로 선택
+        positive_data = random.choice([x for x in each_speaker_datas if x != anchor_data])
         positive_audio = self.load_audio(positive_data)
         
-        negative_datas_dirs = [d for d in self.speaker_datas.keys() if d != speaker_dir.split('/')[-1]]
-        negative_speaker_dir = random.choice(negative_datas_dirs)
-        negative_data = random.choice(self.speaker_datas[negative_speaker_dir])
+        # Negative pair는 다른 화자의 파일들 중 랜덤으로 선택
+        negative_speaker_ids = [other_speaker_id for other_speaker_id in self.speaker_datas.keys() if other_speaker_id != speaker_id]
+        negative_speaker_id = random.choice(negative_speaker_ids)
+        negative_data = random.choice(self.speaker_datas[negative_speaker_id])
         negative_audio = self.load_audio(negative_data)
 
         return anchor_audio, positive_audio, negative_audio
