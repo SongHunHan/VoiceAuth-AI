@@ -10,7 +10,7 @@ wandb:
 
 num_workers: 16
 epochs: 3
-batch_size: 32
+batch_size: 12
 learning_rate: 0.00003
 warmup_steps_rate: 10
 seed_number: 42
@@ -19,5 +19,6 @@ max_input_length: 4.0
 log_interval: 100
 
 data_path:
-    train: '/workspace/ssd/AI_hub/speech_recognition/dataset/1.Training/source_data/'
-    valid: '/workspace/ssd/AI_hub/speech_recognition/dataset/2.Validation/source_data/'
+    train: '/workspace/ssd/AI_hub/speech_recognition/dataset/train.txt'
+    valid: '/workspace/ssd/AI_hub/speech_recognition/dataset/valid.txt'
+    test: '/workspace/ssd/AI_hub/speech_recognition/dataset/test.txt'
