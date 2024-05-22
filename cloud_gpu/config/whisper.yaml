@@ -1,0 +1,24 @@
+dataset_name: 'VoiceDatasetWhisper'
+model_name: 'openai/whisper-small'
+        
+is_amp: true
+
+wandb:
+    use: true
+    project_name: 'whisper_contrastive_learning'
+    run_name: 'whisper_encoder'
+
+num_workers: 16
+epochs: 3
+batch_size: 12
+learning_rate: 0.00003
+warmup_steps_rate: 10
+seed_number: 42
+
+max_input_length: 4.0
+log_interval: 100
+
+data_path:
+    train: '/home/work/voice-data/dataset/train.txt'
+    valid: '/home/work/voice-data/dataset/valid.txt'
+    test: '/home/work/voice-data/dataset/test.txt'
