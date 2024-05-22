@@ -61,6 +61,7 @@ def train_epoch(model, dataloader, loss_fn, optimizer, epoch, scaler, scheduler,
         anchor = anchor.to(device)
         positive = positive.to(device)
         negative = negative.to(device)
+        
         with torch.autocast(device_type='cuda', dtype=torch.float16, enabled=config['is_amp']):
             anchor_embeddings = model(anchor).last_hidden_state.mean(dim=1)
             positive_embeddings = model(positive).last_hidden_state.mean(dim=1)

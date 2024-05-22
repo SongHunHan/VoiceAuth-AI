@@ -10,7 +10,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import Dataset, DataLoader
 from torch.cuda.amp import GradScaler
-from transformers import AutoProcessor, Wav2Vec2Model, Wav2Vec2ForXVector, AutoFeatureExtractor
+from transformers import AutoProcessor, Wav2Vec2Model, Wav2Vec2ForXVector, AutoFeatureExtractor, Wav2Vec2BertModel
 from transformers import get_linear_schedule_with_warmup
 from tqdm import tqdm
 from sklearn.metrics import roc_curve, auc, precision_recall_curve, f1_score
@@ -18,7 +18,7 @@ from sklearn.metrics import roc_curve, auc, precision_recall_curve, f1_score
 from models import load_model
 from dataset.VoiceDataset import load_custom_dataset
 from utils.logger import CustomLogger
-from utils.losses import InfoNCE, FocalInfoNCE
+from utils.losses import InfoNCE
 
 
 def get_argparse():
@@ -41,8 +41,8 @@ def set_seed(seed_number):
     torch.manual_seed(seed_number)
     torch.cuda.manual_seed(seed_number)
     torch.cuda.manual_seed_all(seed_number)
-    torch.backends.cudnn.deterministic = True ## 재현을 위한 거면 True
-    torch.backends.cudnn.benchmark = False      ## 재현을 위한 거면 False
+    torch.backends.cudnn.deterministic = False ## 재현을 위한 거면 True
+    torch.backends.cudnn.benchmark = True      ## 재현을 위한 거면 False
 
 
 def calculate_similarity(embedding1, embedding2):
@@ -63,10 +63,11 @@ def train_epoch(model, dataloader, loss_fn, optimizer, epoch, scaler, scheduler,
         negative = negative.to(device)
         
         with torch.autocast(device_type='cuda', dtype=torch.float16, enabled=config['is_amp']):
-            anchor_embeddings = model(anchor).embeddings
-            positive_embeddings = model(positive).embeddings
-            negative_embeddings = model(negative).embeddings
-        
+            print(model(anchor).last_hidden_state.shape)
+            anchor_embeddings = model(anchor).last_hidden_state.mean(dim=1)
+            positive_embeddings = model(positive).last_hidden_state.mean(dim=1)
+            negative_embeddings = model(negative).last_hidden_state.mean(dim=1)
+
         loss = loss_fn(anchor_embeddings, positive_embeddings, negative_embeddings)
         scaler.scale(loss).backward()
         scaler.unscale_(optimizer)
@@ -101,9 +102,9 @@ def valid_epoch(model, dataloader, loss_fn, optimizer, epoch, logger, device, co
         negative = negative.to(device)
         
         with torch.no_grad():
-            anchor_embeddings = model(anchor).embeddings
-            positive_embeddings = model(positive).embeddings
-            negative_embeddings = model(negative).embeddings
+            anchor_embeddings = model(anchor).last_hidden_state.mean(dim=1)
+            positive_embeddings = model(positive).last_hidden_state.mean(dim=1)
+            negative_embeddings = model(negative).last_hidden_state.mean(dim=1)
 
         loss = loss_fn(anchor_embeddings, positive_embeddings, negative_embeddings)
         
@@ -158,11 +159,10 @@ def main():
     os.makedirs(save_path, exist_ok=True)
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    model = Wav2Vec2ForXVector.from_pretrained(config['model_name']).to(device)
+    model = Wav2Vec2BertModel.from_pretrained(config['model_name']).to(device)
     # model = load_model(config['model_name']).from_pretrained(config['model_name'])
     optimizer = torch.optim.AdamW(model.parameters(), lr=config['learning_rate'])
     loss_fn = InfoNCE()
-    # loss_fn = FocalInfoNCE(temperature=0.1, reduction='mean', negative_mode='unpaired', gamma=2.0)
 
     train_dataset = load_custom_dataset(config['dataset_name'])(config, mode='train')
     valid_dataset = load_custom_dataset(config['dataset_name'])(config, mode='valid')

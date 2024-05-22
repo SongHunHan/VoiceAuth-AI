@@ -8,14 +8,14 @@ wandb:
     project_name: 'wav2vec_contrastive_learning'
     run_name: 'wav2vecXvectorModel'
 
-num_workers: 12
+num_workers: 16
 epochs: 3
 batch_size: 24
 learning_rate: 0.00001
 warmup_steps_rate: 10
 seed_number: 42
 
-max_input_length: 4.0
+max_input_length: 5.0
 log_interval: 100
 
 data_path:
