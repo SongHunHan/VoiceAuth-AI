@@ -1,0 +1,24 @@
+dataset_name: 'VoiceDatasetWav2Vec'
+model_name: 'facebook/wav2vec2-base-960h'
+        
+is_amp: true
+
+wandb:
+    use: true
+    project_name: 'wav2vec_contrastive_learning'
+    run_name: 'wav2vecXvectorModel'
+
+num_workers: 16
+epochs: 3
+batch_size: 96
+learning_rate: 0.00003
+warmup_steps_rate: 10
+seed_number: 42
+
+max_input_length: 5.0
+log_interval: 100
+
+data_path:
+    train: '/home/work/voice-data/dataset/train.txt'
+    valid: '/home/work/voice-data/dataset/valid.txt'
+    test: '/home/work/voice-data/dataset/test.txt'
