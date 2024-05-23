@@ -1,7 +1,7 @@
 dataset_name: 'VoiceDatasetWhisper'
 model_name: 'openai/whisper-small'
         
-is_amp: true
+is_amp: false
 
 wandb:
     use: true
@@ -10,7 +10,7 @@ wandb:
 
 num_workers: 16
 epochs: 3
-batch_size: 12
+batch_size: 8
 learning_rate: 0.00003
 warmup_steps_rate: 10
 seed_number: 42
