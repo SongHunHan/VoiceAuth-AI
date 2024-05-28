@@ -18,7 +18,7 @@ from sklearn.metrics import roc_curve, auc, precision_recall_curve, f1_score
 from models import load_model
 from dataset.VoiceDataset import load_custom_dataset
 from utils.logger import CustomLogger
-from utils.losses import InfoNCE
+from utils.losses import InfoNCE, FocalInfoNCE
 
 
 def get_argparse():
@@ -161,7 +161,8 @@ def main():
     model = Wav2Vec2Model.from_pretrained(config['model_name']).to(device)
     # model = load_model(config['model_name']).from_pretrained(config['model_name'])
     optimizer = torch.optim.AdamW(model.parameters(), lr=config['learning_rate'])
-    loss_fn = InfoNCE()
+    # loss_fn = InfoNCE()
+    loss_fn = FocalInfoNCE(temperature=0.1, reduction='mean', negative_mode='unpaired', gamma=2.0)
 
     train_dataset = load_custom_dataset(config['dataset_name'])(config, mode='train')
     valid_dataset = load_custom_dataset(config['dataset_name'])(config, mode='valid')
