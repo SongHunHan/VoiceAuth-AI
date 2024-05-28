@@ -15,7 +15,7 @@ learning_rate: 0.00003
 warmup_steps_rate: 10
 seed_number: 42
 
-max_input_length: 5.0
+max_input_length: 4.0
 log_interval: 100
 
 data_path:
