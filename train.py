@@ -185,7 +185,7 @@ def main():
 
         if val_avg_loss < best_val_loss:
             best_val_loss = val_avg_loss
-            torch.save(model.state_dict(), f"{save_path}/best_model.pth")
+            torch.save(model.state_dict(), f"{save_path}/best_model_{epoch}.pth")
             print(f"Model saved at epoch {epoch+1} with validation loss: {val_avg_loss:.4f}")
 
     logger.finish()

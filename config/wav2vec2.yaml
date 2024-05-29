@@ -1,5 +1,5 @@
 dataset_name: 'VoiceDatasetWav2Vec'
-model_name: 'facebook/wav2vec2-large'
+model_name: 'facebook/wav2vec2-large-960h-lv60-self'
         
 is_amp: true
 
